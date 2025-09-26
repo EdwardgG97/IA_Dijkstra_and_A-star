@@ -123,10 +123,13 @@ def main():
             # Mostrar el mapa sin ruta
             plot_map(graph, title="Mapa del Juego")
             
+            # Preguntar si se debe evitar el agua
+            avoid_water = input("\n¿Evitar agua a menos que sea la única opción? (s/n): ").lower() == 's'
+            
             # Comparar algoritmos
             print("\nComparando algoritmos de búsqueda...")
             path_dijkstra, path_astar, visited_dijkstra, visited_astar = compare_algorithms(
-                graph, start_node, end_node
+                graph, start_node, end_node, avoid_water=avoid_water
             )
             
             # Mostrar resultados individuales
@@ -166,10 +169,13 @@ def main():
             # Mostrar el mapa sin ruta
             plot_map(graph, title="Mapa Aleatorio")
             
+            # Preguntar si se debe evitar el agua
+            avoid_water = input("\n¿Evitar agua a menos que sea la única opción? (s/n): ").lower() == 's'
+            
             # Comparar algoritmos
             print("\nComparando algoritmos de búsqueda...")
             path_dijkstra, path_astar, visited_dijkstra, visited_astar = compare_algorithms(
-                graph, start_node, end_node
+                graph, start_node, end_node, avoid_water=avoid_water
             )
             
             # Mostrar resultados individuales

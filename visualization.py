@@ -123,7 +123,7 @@ def plot_map(graph, path: List[Node] = None, visited: Set[Node] = None,
     plt.tight_layout()
     plt.show()
 
-def compare_algorithms(graph, start_node: Node, end_node: Node):
+def compare_algorithms(graph, start_node: Node, end_node: Node, avoid_water: bool = True):
     """
     Compara los algoritmos de búsqueda mostrando los resultados en una sola figura.
     
@@ -131,19 +131,23 @@ def compare_algorithms(graph, start_node: Node, end_node: Node):
         graph: Grafo del juego
         start_node: Nodo de inicio
         end_node: Nodo de destino
+        avoid_water: Si es True, intentará evitar el agua a menos que sea la única opción
     """
     from graph import PathFinder
     
     # Crear figura con subgráficos
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
     
+    # Título adicional para mostrar la configuración
+    water_setting = "(Evitando agua)" if avoid_water else "(Permitiendo agua)"
+    
     # Ejecutar Dijkstra
     graph.reset_nodes()
-    path_dijkstra, visited_dijkstra = PathFinder.dijkstra(graph, start_node, end_node)
+    path_dijkstra, visited_dijkstra = PathFinder.dijkstra(graph, start_node, end_node, avoid_water=avoid_water)
     
     # Ejecutar A*
     graph.reset_nodes()
-    path_astar, visited_astar = PathFinder.a_star(graph, start_node, end_node)
+    path_astar, visited_astar = PathFinder.a_star(graph, start_node, end_node, avoid_water=avoid_water)
     
     # Obtener información del mapa de terreno
     terrain_map = np.zeros((graph.width, graph.height))
@@ -161,6 +165,7 @@ def compare_algorithms(graph, start_node: Node, end_node: Node):
     ax1.imshow(terrain_map, cmap=plt.cm.tab20, origin='lower', 
                extent=[-0.5, graph.width-0.5, -0.5, graph.height-0.5],
                aspect='equal')
+    ax1.set_title(f'Algoritmo de Dijkstra {water_setting}', fontsize=14, fontweight='bold')
     
     # Dibujar nodos visitados en Dijkstra
     if visited_dijkstra:
@@ -181,7 +186,6 @@ def compare_algorithms(graph, start_node: Node, end_node: Node):
                 marker='X', edgecolor='black')
     
     # Configurar Dijkstra subplot
-    ax1.set_title('Algoritmo de Dijkstra', fontsize=14, fontweight='bold')
     ax1.set_xlabel('Coordenada X')
     ax1.set_ylabel('Coordenada Y')
     ax1.set_xticks(range(graph.width))
@@ -192,6 +196,7 @@ def compare_algorithms(graph, start_node: Node, end_node: Node):
     ax2.imshow(terrain_map, cmap=plt.cm.tab20, origin='lower', 
                extent=[-0.5, graph.width-0.5, -0.5, graph.height-0.5],
                aspect='equal')
+    ax2.set_title(f'Algoritmo A* {water_setting}', fontsize=14, fontweight='bold')
     
     # Dibujar nodos visitados en A*
     if visited_astar:
@@ -214,7 +219,6 @@ def compare_algorithms(graph, start_node: Node, end_node: Node):
                 marker='X', edgecolor='black', label='Destino')
     
     # Configurar A* subplot
-    ax2.set_title('Algoritmo A*', fontsize=14, fontweight='bold')
     ax2.set_xlabel('Coordenada X')
     ax2.set_ylabel('Coordenada Y')
     ax2.set_xticks(range(graph.width))

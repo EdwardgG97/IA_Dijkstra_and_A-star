@@ -34,9 +34,43 @@ class Graph:
             node.walkable = Terrain.is_walkable(terrain_type)
             self.terrain[x][y] = terrain_type
     
-    def get_neighbors(self, node: Node) -> List[Node]:
-        """Obtiene los vecinos transitables de un nodo (incluyendo diagonales)."""
+    def has_alternative_path_without_water(self, current: Node, target: Node) -> bool:
+        """
+        Verifica si hay un camino alternativo al objetivo que no pase por agua.
+        
+        Args:
+            current: Nodo actual
+            target: Nodo objetivo a alcanzar
+            
+        Returns:
+            True si existe un camino alternativo sin agua, False en caso contrario
+        """
+        # Si el objetivo es agua, no hay alternativa
+        if target.terrain_type == 'water':
+            return False
+            
+        # Verificar si hay al menos un vecino que no sea agua
+        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            nx, ny = current.x + dx, current.y + dy
+            if (0 <= nx < self.width and 0 <= ny < self.height):
+                neighbor = self.nodes[nx][ny]
+                if neighbor.walkable and neighbor.terrain_type != 'water' and neighbor != target:
+                    return True
+        return False
+
+    def get_neighbors(self, node: Node, avoid_water: bool = True) -> List[Node]:
+        """
+        Obtiene los vecinos transitables de un nodo.
+        
+        Args:
+            node: Nodo del que se obtendrán los vecinos
+            avoid_water: Si es True, intentará evitar el agua a menos que sea la única opción
+            
+        Returns:
+            Lista de nodos vecinos transitables
+        """
         neighbors = []
+        water_neighbors = []
         
         # Coordenadas relativas de los 8 vecinos posibles
         directions = [
@@ -53,11 +87,22 @@ class Graph:
                 
             neighbor = self.nodes[nx][ny]
             
-            # Solo agregar nodos transitables
-            if neighbor.walkable:
+            # Solo considerar nodos transitables
+            if not neighbor.walkable:
+                continue
+                
+            # Separar vecinos de agua
+            if neighbor.terrain_type == 'water':
+                water_neighbors.append(neighbor)
+            else:
                 neighbors.append(neighbor)
         
-        return neighbors
+        # Regla del sistema experto: evitar agua a menos que sea la única opción
+        if avoid_water and neighbors:
+            return neighbors
+        
+        # Si no hay vecinos normales, devolver los de agua (si los hay)
+        return neighbors + water_neighbors
     
     def get_terrain_cost(self, from_node: Node, to_node: Node) -> float:
         """
@@ -128,7 +173,7 @@ class PathFinder:
         return path[::-1]  # Invertir para ir desde inicio hasta fin
     
     @classmethod
-    def dijkstra(cls, graph: Graph, start: Node, end: Node) -> Tuple[List[Node], Set[Node]]:
+    def dijkstra(cls, graph: Graph, start: Node, end: Node, avoid_water: bool = True) -> Tuple[List[Node], Set[Node]]:
         """
         Implementación del algoritmo de Dijkstra para encontrar el camino más corto.
         
@@ -136,6 +181,7 @@ class PathFinder:
             graph: Grafo que representa el mapa
             start: Nodo de inicio
             end: Nodo de destino
+            avoid_water: Si es True, intentará evitar el agua a menos que sea la única opción
             
         Returns:
             Tupla con (camino, nodos visitados)
@@ -165,8 +211,8 @@ class PathFinder:
                 
             closed_set.add(current)
             
-            # Explorar vecinos
-            for neighbor in graph.get_neighbors(current):
+            # Explorar vecinos con la regla de evitar agua
+            for neighbor in graph.get_neighbors(current, avoid_water=avoid_water):
                 if neighbor in closed_set:
                     continue
                 
@@ -187,7 +233,7 @@ class PathFinder:
         return [], closed_set
     
     @classmethod
-    def a_star(cls, graph: Graph, start: Node, end: Node) -> Tuple[List[Node], Set[Node]]:
+    def a_star(cls, graph: Graph, start: Node, end: Node, avoid_water: bool = True) -> Tuple[List[Node], Set[Node]]:
         """
         Implementación del algoritmo A* para encontrar el camino más corto.
         
@@ -195,6 +241,7 @@ class PathFinder:
             graph: Grafo que representa el mapa
             start: Nodo de inicio
             end: Nodo de destino
+            avoid_water: Si es True, intentará evitar el agua a menos que sea la única opción
             
         Returns:
             Tupla con (camino, nodos visitados)
@@ -225,8 +272,8 @@ class PathFinder:
                 
             closed_set.add(current)
             
-            # Explorar vecinos
-            for neighbor in graph.get_neighbors(current):
+            # Explorar vecinos con la regla de evitar agua
+            for neighbor in graph.get_neighbors(current, avoid_water=avoid_water):
                 if neighbor in closed_set:
                     continue
                 
